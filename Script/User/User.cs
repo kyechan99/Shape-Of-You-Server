@@ -132,6 +132,9 @@ namespace Server
             {
                 timeCount--;
                 Server.v_user[i].SendMsg(string.Format("TIME:{0}", timeCount));
+
+                if (timeCount % 60 == 0)
+                    ChangeColor();
             }
         }
 
@@ -189,11 +192,6 @@ namespace Server
             {
                 Console.WriteLine("START");
                 StartGame();
-            }
-            else if (txt[0].Equals("CHANGE"))
-            {
-                Console.WriteLine("CHANGE");
-                ChangeColor();
             }
             else if (txt[0].Equals("DIE"))
             {
@@ -272,6 +270,12 @@ namespace Server
          */
         void StartGame()
         {
+            Console.WriteLine("START !!!");
+
+            for (int j = 0; j < Server.v_user.Count; j++)
+                if (Server.v_user[j] != null)
+                    Server.v_user[j].SendMsg(string.Format("START:{0}", 0));
+
             int memCount = 0;
             for (int i = 0; i < Server.v_user.Count; i++)
             {
@@ -324,7 +328,7 @@ namespace Server
             tmr.Start();
         }
 
-        void ChangeColor()
+        static void ChangeColor()
         {
             for (int i = 0; i < Server.v_user.Count; i++)
             {
@@ -336,7 +340,7 @@ namespace Server
 
                         for (int j = 0; j < Server.v_user.Count; j++)
                             if (Server.v_user[j] != null)
-                                Server.v_user[j].SendMsg(string.Format("CHANGE:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)colorT));
+                                Server.v_user[j].SendMsg(string.Format("CHANGE:{0}:{1}", Server.v_user[i].myIdx, (int)colorT));
                     }
                 }
             }
