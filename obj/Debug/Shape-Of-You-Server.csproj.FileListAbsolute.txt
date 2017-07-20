@@ -1,0 +1,6 @@
+c:\users\kyech\onedrive\문서\visual studio 2015\Projects\Shape-Of-You-Server\bin\Debug\Shape-Of-You-Server.exe.config
+c:\users\kyech\onedrive\문서\visual studio 2015\Projects\Shape-Of-You-Server\bin\Debug\Shape-Of-You-Server.exe
+c:\users\kyech\onedrive\문서\visual studio 2015\Projects\Shape-Of-You-Server\bin\Debug\Shape-Of-You-Server.pdb
+c:\users\kyech\onedrive\문서\visual studio 2015\Projects\Shape-Of-You-Server\obj\Debug\Shape-Of-You-Server.csprojResolveAssemblyReference.cache
+c:\users\kyech\onedrive\문서\visual studio 2015\Projects\Shape-Of-You-Server\obj\Debug\Shape-Of-You-Server.exe
+c:\users\kyech\onedrive\문서\visual studio 2015\Projects\Shape-Of-You-Server\obj\Debug\Shape-Of-You-Server.pdb
