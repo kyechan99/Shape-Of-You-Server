@@ -36,18 +36,22 @@ public enum COLOR
     BLACK
 }
 
+
 namespace Server
 {
     class User
     {
+        UserData userData = new UserData();
         static System.Timers.Timer tmr = new System.Timers.Timer();
 
-        UserData userData = new UserData();
+        public const int maxPlayTime = 62;
+        public static int timeCount = maxPlayTime;
+
         /**** 유저가 가지고 있을 정보 (변수) ********************/
-        public static int timeCount = 180;
-        public int myIdx = 0;
         string nickName = "";
+        public int myIdx = 0;
         float posX = 0, posY = 0;
+        public bool isLive = true;
         COLOR color = COLOR.WHITE;
         public PROPER proper = PROPER.GENERAL;
         MOVE_CONTROL myMove = MOVE_CONTROL.STOP;
@@ -133,8 +137,12 @@ namespace Server
 
             if (timeCount < 0)
             {
-                timeCount = 180;
+                timeCount = maxPlayTime;
                 tmr.Stop();
+
+                for (int i = 0; i < Server.v_user.Count; i++)
+                    Server.v_user[i].SendMsg(string.Format("DONE:{0}", (int)PROPER.THIEF));
+
                 return;
             }
 
@@ -177,14 +185,18 @@ namespace Server
                 userData.workSocket.Close();
 
                 Server.RemoveUser(myIdx);
-                
-                for (int j = 0; j < Server.v_user.Count; j++)
-                    Server.v_user[j].SendMsg(string.Format("DIE:{0}", myIdx));
 
                 if (Server.v_user.Count.Equals(0))
                 {
-                    timeCount = 180;
+                    timeCount = maxPlayTime;
                     tmr.Stop();
+                    for (int j = 0; j < Server.v_user.Count; j++)
+                        Server.v_user[j].SendMsg(string.Format("DIE:{0}", myIdx));
+                }
+                else
+                {
+                    for (int j = 0; j < Server.v_user.Count; j++)
+                        Server.v_user[j].SendMsg(string.Format("DIE:{0}", myIdx));
                 }
             }
             else if (txt[0].Equals("MOVE"))
@@ -197,7 +209,8 @@ namespace Server
             }
             else if (txt[0].Equals("CHAT"))
             {
-                Chat(txt[1]);
+                Console.WriteLine("MSG");
+                Chat(txt[1], txt[2]);
             }
             else if (txt[0].Equals("DEBUG"))
             {
@@ -218,6 +231,28 @@ namespace Server
                 {
                     Server.v_user[i].SendMsg(string.Format("DIE:{0}", int.Parse(txt[1])));
                 }
+
+                int thiefCount = 0, policeCount = 0;
+                bool lCheck = true;
+                for (int j = 0; j < Server.v_user.Count; j++)
+                {
+                    if (Server.v_user[j].isLive)
+                    {
+                        lCheck = false;
+                        break;
+                    }
+
+                    if (Server.v_user[j].proper.Equals(PROPER.THIEF)) thiefCount++;
+                    else if (Server.v_user[j].proper.Equals(PROPER.POLICE)) policeCount++;
+                }
+
+                if (lCheck)
+                    if (thiefCount.Equals(0))
+                        for (int i = 0; i < Server.v_user.Count; i++)
+                            Server.v_user[i].SendMsg(string.Format("DONE:{0}", (int)PROPER.POLICE));
+                    else if (policeCount.Equals(0))
+                        for (int i = 0; i < Server.v_user.Count; i++)
+                            Server.v_user[i].SendMsg(string.Format("DONE:{0}", (int)PROPER.THIEF));
             }
             else if (txt[0].Equals("ATTACK"))
             {
@@ -253,7 +288,7 @@ namespace Server
                     SendMsg(string.Format("ADDUSER:{0}:{1}", myIdx, nickName));
 
                     Console.WriteLine("WAIT : " + timeCount);
-                    if (timeCount < 180)
+                    if (timeCount < maxPlayTime)
                     {
                         SendMsg(string.Format("WAIT"));
                     }
@@ -280,13 +315,13 @@ namespace Server
         /**
          * @brief 채팅
          */
-        void Chat(string txt)
+        void Chat(string nick, string msg)
         {
-            int idx = Server.v_user.IndexOf(this);
-
+            Console.WriteLine(string.Format("CHAT:{0}:{1}", nick, msg));
             for (int i = 0; i < Server.v_user.Count; i++)
             {
-                Server.v_user[i].SendMsg(string.Format("CHAT:{0}:{1}", idx, txt));
+                if (Server.v_user != null)
+                    Server.v_user[i].SendMsg(string.Format("CHAT:{0}:{1}", nick, msg));
             }
         }
 
