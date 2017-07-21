@@ -44,22 +44,24 @@ namespace Server
 
         UserData userData = new UserData();
         /**** 유저가 가지고 있을 정보 (변수) ********************/
-        static int timeCount = 180;
+        public static int timeCount = 180;
         public int myIdx = 0;
         string nickName = "";
         float posX = 0, posY = 0;
         COLOR color = COLOR.WHITE;
-        PROPER proper = PROPER.GENERAL;
+        public PROPER proper = PROPER.GENERAL;
         MOVE_CONTROL myMove = MOVE_CONTROL.STOP;
         /****************************************************/
 
 
         public User(Socket socket)
         {
-            tmr.Interval = 1000;
-            tmr.Elapsed += timeCheck;
-            tmr.AutoReset = true;
-            tmr.Enabled = true;
+            if (tmr.Interval != 1000)
+            {
+                tmr.Interval = 1000;
+                tmr.Elapsed += timeCheck;
+                tmr.AutoReset = true;
+            }
 
             myIdx = Server.userIdx;
             proper = PROPER.GENERAL;
@@ -119,18 +121,26 @@ namespace Server
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
-                //Server.RemoveUser(this);
-                //Console.WriteLine("User Closed");
+                Console.WriteLine("SOCKECT DISCONNECT");
+                //Console.WriteLine(ex.ToString());
             }
         }
 
 
         private static void timeCheck(Object source, System.Timers.ElapsedEventArgs e)
         {
+            timeCount--;
+
+            if (timeCount < 0)
+            {
+                timeCount = 180;
+                tmr.Stop();
+                return;
+            }
+
+            Console.WriteLine("TC " + timeCount);
             for (int i = 0; i < Server.v_user.Count; i++)
             {
-                timeCount--;
                 Server.v_user[i].SendMsg(string.Format("TIME:{0}", timeCount));
 
                 if (timeCount % 60 == 0)
@@ -167,6 +177,15 @@ namespace Server
                 userData.workSocket.Close();
 
                 Server.RemoveUser(myIdx);
+                
+                for (int j = 0; j < Server.v_user.Count; j++)
+                    Server.v_user[j].SendMsg(string.Format("DIE:{0}", myIdx));
+
+                if (Server.v_user.Count.Equals(0))
+                {
+                    timeCount = 180;
+                    tmr.Stop();
+                }
             }
             else if (txt[0].Equals("MOVE"))
             {
@@ -190,11 +209,11 @@ namespace Server
             }
             else if (txt[0].Equals("START"))
             {
-                Console.WriteLine("START");
                 StartGame();
             }
             else if (txt[0].Equals("DIE"))
             {
+                Console.WriteLine("DIED");
                 for (int i = 0; i < Server.v_user.Count; i++)
                 {
                     Server.v_user[i].SendMsg(string.Format("DIE:{0}", int.Parse(txt[1])));
@@ -232,6 +251,12 @@ namespace Server
                 else
                 {
                     SendMsg(string.Format("ADDUSER:{0}:{1}", myIdx, nickName));
+
+                    Console.WriteLine("WAIT : " + timeCount);
+                    if (timeCount < 180)
+                    {
+                        SendMsg(string.Format("WAIT"));
+                    }
                 }
             }
         }
@@ -268,7 +293,7 @@ namespace Server
         /**
          * @brief 게임 시작 (직업 나눠줌)
          */
-        void StartGame()
+        static void StartGame()
         {
             Console.WriteLine("START !!!");
 
@@ -292,7 +317,16 @@ namespace Server
 
                 if (Server.v_user[i] != null)
                 {
-                    if (police > 0)
+                    if (thief.Equals(0))
+                    {
+                        police--;
+                        Server.v_user[i].proper = PROPER.POLICE;
+
+                        for (int j = 0; j < Server.v_user.Count; j++)
+                            if (Server.v_user[j] != null)
+                                Server.v_user[j].SendMsg(string.Format("PROPER:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)PROPER.POLICE, (int)colorT));
+                    }
+                    else if (police > 0)
                     {
                         if (Server.rand.Next(0, 2) == 0)
                         {
@@ -310,7 +344,7 @@ namespace Server
 
                             for (int j = 0; j < Server.v_user.Count; j++)
                                 if (Server.v_user[j] != null)
-                                    Server.v_user[j].SendMsg(string.Format("PROPER:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)PROPER.POLICE, (int)colorT));
+                                    Server.v_user[j].SendMsg(string.Format("PROPER:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)PROPER.THIEF, (int)colorT));
                         }
                     }
                     else
@@ -320,7 +354,7 @@ namespace Server
 
                         for (int j = 0; j < Server.v_user.Count; j++)
                             if (Server.v_user[j] != null)
-                                Server.v_user[j].SendMsg(string.Format("PROPER:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)PROPER.POLICE, (int)colorT));
+                                Server.v_user[j].SendMsg(string.Format("PROPER:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)PROPER.THIEF, (int)colorT));
                     }
                 }
             }
