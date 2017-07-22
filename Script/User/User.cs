@@ -144,8 +144,19 @@ namespace Server
                 timeCount = maxPlayTime;
                 tmr.Stop();
 
+                uint maxActive = 0;
+                int mvpIdx = 0;
                 for (int i = 0; i < Server.v_user.Count; i++)
-                    Server.v_user[i].SendMsg(string.Format("DONE:{0}", (int)PROPER.THIEF));
+                    if (Server.v_user[i] != null)
+                        if (Server.v_user[i].proper.Equals(PROPER.THIEF))
+                            if (maxActive < Server.v_user[i].thiefActiveMass)
+                            {
+                                maxActive = Server.v_user[i].thiefActiveMass;
+                                mvpIdx = Server.v_user[i].myIdx;
+                            }
+
+                for (int i = 0; i < Server.v_user.Count; i++)
+                    Server.v_user[i].SendMsg(string.Format("DONE:{0}:{1}", (int)PROPER.THIEF, mvpIdx));
 
                 return;
             }
@@ -155,7 +166,7 @@ namespace Server
             {
                 Server.v_user[i].SendMsg(string.Format("TIME:{0}", timeCount));
 
-                if (timeCount % 60 == 0 && timeCount.Equals(0))
+                if (timeCount % 60 == 0 && !timeCount.Equals(0))
                     ChangeColor();
             }
         }
@@ -273,7 +284,7 @@ namespace Server
                                     if (maxActive < Server.v_user[i].policeActiveMass)
                                     {
                                         maxActive = Server.v_user[i].policeActiveMass;
-                                        mvpIdx = i;
+                                        mvpIdx = Server.v_user[i].myIdx;
                                     }
 
                         for (int i = 0; i < Server.v_user.Count; i++)
@@ -289,7 +300,7 @@ namespace Server
                                     if (maxActive < Server.v_user[i].thiefActiveMass)
                                     {
                                         maxActive = Server.v_user[i].thiefActiveMass;
-                                        mvpIdx = i;
+                                        mvpIdx = Server.v_user[i].myIdx;
                                     }
 
                         for (int i = 0; i < Server.v_user.Count; i++)
@@ -314,6 +325,12 @@ namespace Server
          */
         void Login()
         {
+            if (timeCount < maxPlayTime)
+            {
+                SendMsg(string.Format("WAIT:{0}", mapNum));
+                return;
+            }
+
             for (int i = 0; i < Server.v_user.Count; i++)
             {
                 //!< 내가 아닌 다른 유저에게
