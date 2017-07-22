@@ -148,7 +148,7 @@ namespace Server
                 int mvpIdx = 0;
                 for (int i = 0; i < Server.v_user.Count; i++)
                     if (Server.v_user[i] != null)
-                        if (Server.v_user[i].proper.Equals(PROPER.THIEF))
+                        if (Server.v_user[i].proper.Equals(PROPER.THIEF) && Server.v_user[i].isLive)
                             if (maxActive < Server.v_user[i].thiefActiveMass)
                             {
                                 maxActive = Server.v_user[i].thiefActiveMass;
@@ -206,12 +206,12 @@ namespace Server
                     timeCount = maxPlayTime;
                     tmr.Stop();
                     for (int j = 0; j < Server.v_user.Count; j++)
-                        Server.v_user[j].SendMsg(string.Format("DIE:{0}", myIdx));
+                        Server.v_user[j].SendMsg(string.Format("DIE:{0}", myIdx, myIdx));
                 }
                 else
                 {
                     for (int j = 0; j < Server.v_user.Count; j++)
-                        Server.v_user[j].SendMsg(string.Format("DIE:{0}", myIdx));
+                        Server.v_user[j].SendMsg(string.Format("DIE:{0}", myIdx, myIdx));
                 }
             }
             else if (txt[0].Equals("MOVE"))
@@ -247,65 +247,67 @@ namespace Server
             else if (txt[0].Equals("DIE"))
             {
                 Console.WriteLine("DIED");
-                for (int i = 0; i < Server.v_user.Count; i++)
-                {
-                    Server.v_user[i].SendMsg(string.Format("DIE:{0}", int.Parse(txt[1])));
-
-                    if (Server.v_user[i].myIdx.Equals(int.Parse(txt[2])) && !txt[1].Equals(txt[2]))
-                    {
-                        Server.v_user[i].policeActiveMass += 5;
-                    }
-                }
 
                 int thiefCount = 0, policeCount = 0;
-                bool lCheck = true;
                 for (int j = 0; j < Server.v_user.Count; j++)
                 {
-                    if (Server.v_user[j].isLive)
+                    if (Server.v_user[j] != null)
                     {
-                        if (int.Parse(txt[1]).Equals(Server.v_user[j].myIdx))
-                            Server.v_user[j].isLive = false;
+                        Server.v_user[j].SendMsg(string.Format("DIE:{0}", int.Parse(txt[1]), txt[2]));
 
-                        lCheck = false;
-                        //break;
+                        if (Server.v_user[j].isLive)
+                        {
+                            if (int.Parse(txt[1]).Equals(Server.v_user[j].myIdx))
+                                Server.v_user[j].isLive = false;
+                            else
+                            {
+                                if (Server.v_user[j].proper.Equals(PROPER.THIEF)) thiefCount++;
+                                else if (Server.v_user[j].proper.Equals(PROPER.POLICE)) policeCount++;
+                            }
+
+                            if (Server.v_user[j].myIdx.Equals(int.Parse(txt[2])) && !txt[1].Equals(txt[2]))
+                                Server.v_user[j].policeActiveMass += 5;
+                        }
                     }
-
-                    if (Server.v_user[j].proper.Equals(PROPER.THIEF)) thiefCount++;
-                    else if (Server.v_user[j].proper.Equals(PROPER.POLICE)) policeCount++;
                 }
 
-                if (lCheck)
-                    if (thiefCount.Equals(0))
-                    {
-                        int maxActive = -10, mvpIdx = 0;
-                        for (int i = 0; i < Server.v_user.Count; i++)
-                            if (Server.v_user[i] != null)
-                                if (Server.v_user[i].proper.Equals(PROPER.POLICE))
-                                    if (maxActive < Server.v_user[i].policeActiveMass)
-                                    {
-                                        maxActive = Server.v_user[i].policeActiveMass;
-                                        mvpIdx = Server.v_user[i].myIdx;
-                                    }
+                if (thiefCount.Equals(0))
+                {
+                    timeCount = maxPlayTime;
+                    tmr.Stop();
 
-                        for (int i = 0; i < Server.v_user.Count; i++)
-                            Server.v_user[i].SendMsg(string.Format("DONE:{0}:{1}", (int)PROPER.POLICE, mvpIdx));
-                    }
-                    else if (policeCount.Equals(0))
-                    {
-                        uint maxActive = 0;
-                        int mvpIdx = 0;
-                        for (int i = 0; i < Server.v_user.Count; i++)
-                            if (Server.v_user[i] != null)
-                                if (Server.v_user[i].proper.Equals(PROPER.THIEF))
-                                    if (maxActive < Server.v_user[i].thiefActiveMass)
-                                    {
-                                        maxActive = Server.v_user[i].thiefActiveMass;
-                                        mvpIdx = Server.v_user[i].myIdx;
-                                    }
+                    int maxActive = -10, mvpIdx = 0;
+                    for (int i = 0; i < Server.v_user.Count; i++)
+                        if (Server.v_user[i] != null)
+                            if (Server.v_user[i].proper.Equals(PROPER.POLICE) && Server.v_user[i].isLive)
+                                if (maxActive < Server.v_user[i].policeActiveMass)
+                                {
+                                    maxActive = Server.v_user[i].policeActiveMass;
+                                    mvpIdx = Server.v_user[i].myIdx;
+                                }
 
-                        for (int i = 0; i < Server.v_user.Count; i++)
-                            Server.v_user[i].SendMsg(string.Format("DONE:{0}:{1}", (int)PROPER.THIEF));
-                    }
+                    for (int i = 0; i < Server.v_user.Count; i++)
+                        Server.v_user[i].SendMsg(string.Format("DONE:{0}:{1}", (int)PROPER.POLICE, mvpIdx));
+                }
+                else if (policeCount.Equals(0))
+                {
+                    timeCount = maxPlayTime;
+                    tmr.Stop();
+
+                    uint maxActive = 0;
+                    int mvpIdx = 0;
+                    for (int i = 0; i < Server.v_user.Count; i++)
+                        if (Server.v_user[i] != null)
+                            if (Server.v_user[i].proper.Equals(PROPER.THIEF) && Server.v_user[i].isLive)
+                                if (maxActive < Server.v_user[i].thiefActiveMass)
+                                {
+                                    maxActive = Server.v_user[i].thiefActiveMass;
+                                    mvpIdx = Server.v_user[i].myIdx;
+                                }
+
+                    for (int i = 0; i < Server.v_user.Count; i++)
+                        Server.v_user[i].SendMsg(string.Format("DONE:{0}:{1}", (int)PROPER.THIEF));
+                }
             }
             else if (txt[0].Equals("ATTACK"))
             {
@@ -400,6 +402,8 @@ namespace Server
                 {
                     Server.v_user[j].SendMsg(string.Format("START:{0}", mapNum));
                     Server.v_user[j].isLive = true;
+                    Server.v_user[j].policeActiveMass = 0;
+                    Server.v_user[j].thiefActiveMass = 0;
                 }
 
             int memCount = 0;
@@ -471,7 +475,7 @@ namespace Server
                 {
                     if (Server.v_user[i].proper == PROPER.THIEF)
                     {
-                        int colorT = Server.rand.Next(0, 8);
+                        int colorT = Server.rand.Next(0, 9);
 
                         for (int j = 0; j < Server.v_user.Count; j++)
                             if (Server.v_user[j] != null)
