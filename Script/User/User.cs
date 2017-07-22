@@ -129,8 +129,11 @@ namespace Server
             }
             catch (Exception ex)
             {
+                short len = 0;
+                Util.GetShort(userData.buf, 0, out len);
+                Console.WriteLine(Encoding.UTF8.GetString(userData.buf, 2, len));
                 Console.WriteLine("SOCKECT DISCONNECT");
-                //Console.WriteLine(ex.ToString());
+                Console.WriteLine(ex.ToString());
             }
         }
 
@@ -206,12 +209,12 @@ namespace Server
                     timeCount = maxPlayTime;
                     tmr.Stop();
                     for (int j = 0; j < Server.v_user.Count; j++)
-                        Server.v_user[j].SendMsg(string.Format("DIE:{0}", myIdx, myIdx));
+                        Server.v_user[j].SendMsg(string.Format("DIE:{0}:{1}", myIdx, myIdx));
                 }
                 else
                 {
                     for (int j = 0; j < Server.v_user.Count; j++)
-                        Server.v_user[j].SendMsg(string.Format("DIE:{0}", myIdx, myIdx));
+                        Server.v_user[j].SendMsg(string.Format("DIE:{0}:{1}", myIdx, myIdx));
                 }
             }
             else if (txt[0].Equals("MOVE"))
@@ -253,7 +256,7 @@ namespace Server
                 {
                     if (Server.v_user[j] != null)
                     {
-                        Server.v_user[j].SendMsg(string.Format("DIE:{0}", int.Parse(txt[1]), txt[2]));
+                        Server.v_user[j].SendMsg(string.Format("DIE:{0}:{1}", int.Parse(txt[1]), int.Parse(txt[2])));
 
                         if (Server.v_user[j].isLive)
                         {
@@ -306,7 +309,7 @@ namespace Server
                                 }
 
                     for (int i = 0; i < Server.v_user.Count; i++)
-                        Server.v_user[i].SendMsg(string.Format("DONE:{0}:{1}", (int)PROPER.THIEF));
+                        Server.v_user[i].SendMsg(string.Format("DONE:{0}:{1}", (int)PROPER.THIEF, mvpIdx));
                 }
             }
             else if (txt[0].Equals("ATTACK"))
@@ -327,7 +330,7 @@ namespace Server
          */
         void Login()
         {
-            if (timeCount < maxPlayTime)
+            if (timeCount < maxPlayTime && Server.v_user.Count > 9)
             {
                 SendMsg(string.Format("WAIT:{0}", mapNum));
                 return;
@@ -418,7 +421,7 @@ namespace Server
 
             for (int i = 0; i < Server.v_user.Count; i++)
             {
-                int colorT = Server.rand.Next(0, 8);
+                int colorT = Server.rand.Next(0, 9);
 
                 if (Server.v_user[i] != null)
                 {
@@ -488,7 +491,7 @@ namespace Server
         void attack(int idx)
         {
             for (int j = 0; j < Server.v_user.Count; j++)
-                if (Server.v_user[j] != null && Server.v_user[j].myIdx != idx)
+                if (Server.v_user[j] != null)
                     Server.v_user[j].SendMsg(string.Format("ATTACK:{0}", idx));
         }
 
