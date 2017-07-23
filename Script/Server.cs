@@ -15,6 +15,7 @@ namespace Server
         public static List<User> v_user = new List<User>();
         public static int userIdx = 0;
         public static ManualResetEvent allDone = new ManualResetEvent(false);
+        public static string version = "1.1.0";
 
         /**
          * @brief 초기화
@@ -54,6 +55,7 @@ namespace Server
          */
         public static void WaitingSocket(int port)
         {
+            Console.WriteLine(string.Format("----- Server Version : {0} -----", Server.version));
             IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Any, port);
             Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             listener.NoDelay = true;

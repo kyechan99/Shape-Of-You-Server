@@ -189,7 +189,7 @@ namespace Server
             if (txt[0].Equals("LOGIN"))
             {
                 nickName = txt[1];
-                Login();
+                Login(txt[2]);
                 Console.WriteLine(txt[1] + " is Login.");
             }
             else if (txt[0].Equals("DISCONNECT"))
@@ -328,9 +328,9 @@ namespace Server
         /**
          * @brief 로그인
          */
-        void Login()
+        void Login(string version)
         {
-            if (timeCount < maxPlayTime && Server.v_user.Count > 9)
+            if ((timeCount < maxPlayTime && Server.v_user.Count > 9) || (!Server.version.Equals(version)))
             {
                 SendMsg(string.Format("WAIT:{0}", mapNum));
                 return;
@@ -398,7 +398,7 @@ namespace Server
         {
             Console.WriteLine("START !!!");
 
-            //mapNum = Server.rand.Next(0, 3);
+            mapNum = Server.rand.Next(0, 6);
 
             for (int j = 0; j < Server.v_user.Count; j++)
                 if (Server.v_user[j] != null)
@@ -478,7 +478,11 @@ namespace Server
                 {
                     if (Server.v_user[i].proper == PROPER.THIEF)
                     {
-                        int colorT = Server.rand.Next(0, 9);
+                        int colorT;
+                        if (timeCount.Equals(0))
+                            colorT = Server.rand.Next(0, 8);
+                        else
+                            colorT = Server.rand.Next(0, 9);
 
                         for (int j = 0; j < Server.v_user.Count; j++)
                             if (Server.v_user[j] != null)

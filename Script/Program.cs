@@ -15,7 +15,7 @@ namespace Server
         {
             Server server = new Server(10000);      //!< 포트 번호
 
-            while(true)
+            while (true)
             {
                 Thread.Sleep(1);
             }
