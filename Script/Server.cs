@@ -15,7 +15,7 @@ namespace Server
         public static List<User> v_user = new List<User>();
         public static int userIdx = 0;
         public static ManualResetEvent allDone = new ManualResetEvent(false);
-        public static string version = "1.1.0";
+        public static string version = "1.2.0";
 
         /**
          * @brief 초기화

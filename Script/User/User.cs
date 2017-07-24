@@ -186,7 +186,43 @@ namespace Server
             //Console.WriteLine(msg);
 
             /************* 기능이 추가되면 덧붙일 것 ***************/
-            if (txt[0].Equals("LOGIN"))
+            if (txt[0].Equals("MOVE"))
+            {
+                int idx = int.Parse(txt[1]);
+                posX = float.Parse(txt[2]);
+                posY = float.Parse(txt[3]);
+                myMove = (MOVE_CONTROL)int.Parse(txt[4]);
+
+                Move(idx);
+
+                if (proper.Equals(PROPER.THIEF))
+                    thiefActiveMass++;
+            }
+            else if (txt[0].Equals("CHAT"))
+            {
+                Console.WriteLine("MSG");
+                Chat(txt[1], txt[2]);
+            }
+            else if (txt[0].Equals("KINEMATIC"))
+            {
+                for (int i = 0; i < Server.v_user.Count; i++)
+                    Server.v_user[i].SendMsg(msg);
+            }
+            else if (txt[0].Equals("ATTACK"))
+            {
+                Console.WriteLine("ATTACK");
+                Attack(int.Parse(txt[1]));
+                policeActiveMass--;             // 아직 모호함
+            }
+            else if (txt[0].Equals("DIE"))
+            {
+                Die(int.Parse(txt[1]), int.Parse(txt[2]));
+            }
+            else if (txt[0].Equals("START"))
+            {
+                StartGame();
+            }
+            else if (txt[0].Equals("LOGIN"))
             {
                 nickName = txt[1];
                 Login(txt[2]);
@@ -216,108 +252,7 @@ namespace Server
                     for (int j = 0; j < Server.v_user.Count; j++)
                         Server.v_user[j].SendMsg(string.Format("DIE:{0}:{1}", myIdx, myIdx));
                 }
-            }
-            else if (txt[0].Equals("MOVE"))
-            {
-                int idx = int.Parse(txt[1]);
-                posX = float.Parse(txt[2]);
-                posY = float.Parse(txt[3]);
-                myMove = (MOVE_CONTROL)int.Parse(txt[4]);
-
-                Move(idx);
-
-                if (proper.Equals(PROPER.THIEF))
-                    thiefActiveMass++;
-
-            }
-            else if (txt[0].Equals("CHAT"))
-            {
-                Console.WriteLine("MSG");
-                Chat(txt[1], txt[2]);
-            }
-            else if (txt[0].Equals("DEBUG"))
-            {
-                Console.WriteLine("DEBUG");
-                for (int i = 0; i < Server.v_user.Count; i++)
-                {
-                    Server.v_user[i].SendMsg(string.Format("PROPER:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)PROPER.POLICE, (int)COLOR.GREEN));
-                }
-            }
-            else if (txt[0].Equals("START"))
-            {
-                StartGame();
-            }
-            else if (txt[0].Equals("DIE"))
-            {
-                Console.WriteLine("DIED");
-
-                int thiefCount = 0, policeCount = 0;
-                for (int j = 0; j < Server.v_user.Count; j++)
-                {
-                    if (Server.v_user[j] != null)
-                    {
-                        Server.v_user[j].SendMsg(string.Format("DIE:{0}:{1}", int.Parse(txt[1]), int.Parse(txt[2])));
-
-                        if (Server.v_user[j].isLive)
-                        {
-                            if (int.Parse(txt[1]).Equals(Server.v_user[j].myIdx))
-                                Server.v_user[j].isLive = false;
-                            else
-                            {
-                                if (Server.v_user[j].proper.Equals(PROPER.THIEF)) thiefCount++;
-                                else if (Server.v_user[j].proper.Equals(PROPER.POLICE)) policeCount++;
-                            }
-
-                            if (Server.v_user[j].myIdx.Equals(int.Parse(txt[2])) && !txt[1].Equals(txt[2]))
-                                Server.v_user[j].policeActiveMass += 5;
-                        }
-                    }
-                }
-
-                if (thiefCount.Equals(0))
-                {
-                    timeCount = maxPlayTime;
-                    tmr.Stop();
-
-                    int maxActive = -10, mvpIdx = 0;
-                    for (int i = 0; i < Server.v_user.Count; i++)
-                        if (Server.v_user[i] != null)
-                            if (Server.v_user[i].proper.Equals(PROPER.POLICE) && Server.v_user[i].isLive)
-                                if (maxActive < Server.v_user[i].policeActiveMass)
-                                {
-                                    maxActive = Server.v_user[i].policeActiveMass;
-                                    mvpIdx = Server.v_user[i].myIdx;
-                                }
-
-                    for (int i = 0; i < Server.v_user.Count; i++)
-                        Server.v_user[i].SendMsg(string.Format("DONE:{0}:{1}", (int)PROPER.POLICE, mvpIdx));
-                }
-                else if (policeCount.Equals(0))
-                {
-                    timeCount = maxPlayTime;
-                    tmr.Stop();
-
-                    uint maxActive = 0;
-                    int mvpIdx = 0;
-                    for (int i = 0; i < Server.v_user.Count; i++)
-                        if (Server.v_user[i] != null)
-                            if (Server.v_user[i].proper.Equals(PROPER.THIEF) && Server.v_user[i].isLive)
-                                if (maxActive < Server.v_user[i].thiefActiveMass)
-                                {
-                                    maxActive = Server.v_user[i].thiefActiveMass;
-                                    mvpIdx = Server.v_user[i].myIdx;
-                                }
-
-                    for (int i = 0; i < Server.v_user.Count; i++)
-                        Server.v_user[i].SendMsg(string.Format("DONE:{0}:{1}", (int)PROPER.THIEF, mvpIdx));
-                }
-            }
-            else if (txt[0].Equals("ATTACK"))
-            {
-                Console.WriteLine("ATTACK");
-                attack(int.Parse(txt[1]));
-                policeActiveMass--;             // 아직 모호함
-            }
+            }            
             else
             {
                 //!< 이 부분에 들어오는 일이 있으면 안됨 (패킷 실수)
@@ -370,24 +305,91 @@ namespace Server
             int index = Server.v_user.IndexOf(this);
 
             for (int i = 0; i < Server.v_user.Count; i++)
-            {
                 if (Server.v_user[i] != this)
-                {
                     Server.v_user[i].SendMsg(string.Format("LOGOUT:{0}", index));
-                }
-            }
         }
 
         /**
          * @brief 채팅
+         * @param nick : 이름
+         * @param msg : 내용
          */
         void Chat(string nick, string msg)
         {
             Console.WriteLine(string.Format("CHAT:{0}:{1}", nick, msg));
             for (int i = 0; i < Server.v_user.Count; i++)
-            {
                 if (Server.v_user != null)
                     Server.v_user[i].SendMsg(string.Format("CHAT:{0}:{1}", nick, msg));
+        }
+
+        /**
+         * @brief 사망
+         * @param dIdx : 죽은 유저 idx
+         * @param tIdx : 죽인 유저 idx
+         */
+        void Die(int dIdx, int tIdx)
+        {
+            Console.WriteLine("DIED");
+
+            int thiefCount = 0, policeCount = 0;
+            for (int j = 0; j < Server.v_user.Count; j++)
+            {
+                if (Server.v_user[j] != null)
+                {
+                    Server.v_user[j].SendMsg(string.Format("DIE:{0}:{1}", dIdx, tIdx));
+
+                    if (Server.v_user[j].isLive)
+                    {
+                        if (dIdx.Equals(Server.v_user[j].myIdx))
+                            Server.v_user[j].isLive = false;
+                        else
+                        {
+                            if (Server.v_user[j].proper.Equals(PROPER.THIEF)) thiefCount++;
+                            else if (Server.v_user[j].proper.Equals(PROPER.POLICE)) policeCount++;
+                        }
+
+                        if (Server.v_user[j].myIdx.Equals(tIdx) && !dIdx.Equals(tIdx))
+                            Server.v_user[j].policeActiveMass += 5;
+                    }
+                }
+            }
+
+            if (thiefCount.Equals(0))
+            {
+                timeCount = maxPlayTime;
+                tmr.Stop();
+
+                int maxActive = -10, mvpIdx = 0;
+                for (int i = 0; i < Server.v_user.Count; i++)
+                    if (Server.v_user[i] != null)
+                        if (Server.v_user[i].proper.Equals(PROPER.POLICE) && Server.v_user[i].isLive)
+                            if (maxActive < Server.v_user[i].policeActiveMass)
+                            {
+                                maxActive = Server.v_user[i].policeActiveMass;
+                                mvpIdx = Server.v_user[i].myIdx;
+                            }
+
+                for (int i = 0; i < Server.v_user.Count; i++)
+                    Server.v_user[i].SendMsg(string.Format("DONE:{0}:{1}", (int)PROPER.POLICE, mvpIdx));
+            }
+            else if (policeCount.Equals(0))
+            {
+                timeCount = maxPlayTime;
+                tmr.Stop();
+
+                uint maxActive = 0;
+                int mvpIdx = 0;
+                for (int i = 0; i < Server.v_user.Count; i++)
+                    if (Server.v_user[i] != null)
+                        if (Server.v_user[i].proper.Equals(PROPER.THIEF) && Server.v_user[i].isLive)
+                            if (maxActive < Server.v_user[i].thiefActiveMass)
+                            {
+                                maxActive = Server.v_user[i].thiefActiveMass;
+                                mvpIdx = Server.v_user[i].myIdx;
+                            }
+
+                for (int i = 0; i < Server.v_user.Count; i++)
+                    Server.v_user[i].SendMsg(string.Format("DONE:{0}:{1}", (int)PROPER.THIEF, mvpIdx));
             }
         }
 
@@ -396,9 +398,9 @@ namespace Server
          */
         static void StartGame()
         {
-            Console.WriteLine("START !!!");
-
             mapNum = Server.rand.Next(0, 6);
+            Console.WriteLine(string.Format("START !!! : {0}", mapNum));
+
 
             for (int j = 0; j < Server.v_user.Count; j++)
                 if (Server.v_user[j] != null)
@@ -411,10 +413,8 @@ namespace Server
 
             int memCount = 0;
             for (int i = 0; i < Server.v_user.Count; i++)
-            {
                 if (Server.v_user[i] != null)
                     memCount++;
-            }
 
             int police = memCount / 3;
             int thief = memCount - police;
@@ -470,6 +470,9 @@ namespace Server
             tmr.Start();
         }
 
+        /**
+         * @brief 색바꾸기
+         */
         static void ChangeColor()
         {
             for (int i = 0; i < Server.v_user.Count; i++)
@@ -479,7 +482,7 @@ namespace Server
                     if (Server.v_user[i].proper == PROPER.THIEF)
                     {
                         int colorT;
-                        if (timeCount.Equals(0))
+                        if (timeCount.Equals(60))
                             colorT = Server.rand.Next(0, 8);
                         else
                             colorT = Server.rand.Next(0, 9);
@@ -492,7 +495,11 @@ namespace Server
             }
         }
 
-        void attack(int idx)
+        /**
+         * @brief 공격
+         * @param 공격한 유저의 idx
+         */
+        void Attack(int idx)
         {
             for (int j = 0; j < Server.v_user.Count; j++)
                 if (Server.v_user[j] != null)
@@ -508,9 +515,7 @@ namespace Server
             {
                 if (Server.v_user[i] != null)
                     if (Server.v_user[i] != this)
-                    {
                         Server.v_user[i].SendMsg(string.Format("MOVE:{0}:{1}:{2}:{3}", idx, posX, posY, (int)myMove)); // 내 인덱스 번호와 현재 위치 이동할 방향을 보낸다.
-                    }
             }
         }
 
