@@ -416,56 +416,80 @@ namespace Server
                 if (Server.v_user[i] != null)
                     memCount++;
 
-            int police = memCount / 3;
-            int thief = memCount - police;
+            PROPER[] proArr = new PROPER[memCount];
 
+            for (int i = 0; i < memCount / 3; i++)
+                proArr[i] = PROPER.POLICE;
+            for (int i = 0; i < memCount - (memCount / 3); i++)
+                proArr[(memCount / 3) + i] = PROPER.THIEF;
+
+            int mIdx = 0;
             for (int i = 0; i < Server.v_user.Count; i++)
             {
-                int colorT = Server.rand.Next(0, 9);
-
                 if (Server.v_user[i] != null)
                 {
-                    if (thief.Equals(0))
-                    {
-                        police--;
-                        Server.v_user[i].proper = PROPER.POLICE;
+                    int colorT = Server.rand.Next(0, 9);
+                    int pIdx = Server.rand.Next(0, memCount - (mIdx++));
+                    for (int j = 0; j < Server.v_user.Count; j++)
+                        if (Server.v_user[j] != null)
+                            Server.v_user[j].SendMsg(string.Format("PROPER:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)proArr[pIdx], (int)colorT));
 
-                        for (int j = 0; j < Server.v_user.Count; j++)
-                            if (Server.v_user[j] != null)
-                                Server.v_user[j].SendMsg(string.Format("PROPER:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)PROPER.POLICE, (int)colorT));
-                    }
-                    else if (police > 0)
-                    {
-                        if (Server.rand.Next(0, 2) == 0)
-                        {
-                            police--;
-                            Server.v_user[i].proper = PROPER.POLICE;
-
-                            for (int j = 0; j < Server.v_user.Count; j++)
-                                if (Server.v_user[j] != null)
-                                    Server.v_user[j].SendMsg(string.Format("PROPER:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)PROPER.POLICE, (int)colorT));
-                        }
-                        else
-                        {
-                            thief--;
-                            Server.v_user[i].proper = PROPER.THIEF;
-
-                            for (int j = 0; j < Server.v_user.Count; j++)
-                                if (Server.v_user[j] != null)
-                                    Server.v_user[j].SendMsg(string.Format("PROPER:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)PROPER.THIEF, (int)colorT));
-                        }
-                    }
-                    else
-                    {
-                        thief--;
-                        Server.v_user[i].proper = PROPER.THIEF;
-
-                        for (int j = 0; j < Server.v_user.Count; j++)
-                            if (Server.v_user[j] != null)
-                                Server.v_user[j].SendMsg(string.Format("PROPER:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)PROPER.THIEF, (int)colorT));
-                    }
+                    PROPER tp = proArr[memCount - mIdx];
+                    proArr[memCount - mIdx] = proArr[pIdx];
+                    proArr[pIdx] = tp;
                 }
             }
+
+            //int police = memCount / 3;
+            //int thief = memCount - police;
+
+            //for (int i = 0; i < Server.v_user.Count; i++)
+            //{
+            //    int colorT = Server.rand.Next(0, 9);
+
+            //    if (Server.v_user[i] != null)
+            //    {
+            //        if (thief.Equals(0))
+            //        {
+            //            police--;
+            //            Server.v_user[i].proper = PROPER.POLICE;
+
+            //            for (int j = 0; j < Server.v_user.Count; j++)
+            //                if (Server.v_user[j] != null)
+            //                    Server.v_user[j].SendMsg(string.Format("PROPER:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)PROPER.POLICE, (int)colorT));
+            //        }
+            //        else if (police > 0)
+            //        {
+            //            if (Server.rand.Next(0, 2) == 0)
+            //            {
+            //                police--;
+            //                Server.v_user[i].proper = PROPER.POLICE;
+
+            //                for (int j = 0; j < Server.v_user.Count; j++)
+            //                    if (Server.v_user[j] != null)
+            //                        Server.v_user[j].SendMsg(string.Format("PROPER:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)PROPER.POLICE, (int)colorT));
+            //            }
+            //            else
+            //            {
+            //                thief--;
+            //                Server.v_user[i].proper = PROPER.THIEF;
+
+            //                for (int j = 0; j < Server.v_user.Count; j++)
+            //                    if (Server.v_user[j] != null)
+            //                        Server.v_user[j].SendMsg(string.Format("PROPER:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)PROPER.THIEF, (int)colorT));
+            //            }
+            //        }
+            //        else
+            //        {
+            //            thief--;
+            //            Server.v_user[i].proper = PROPER.THIEF;
+
+            //            for (int j = 0; j < Server.v_user.Count; j++)
+            //                if (Server.v_user[j] != null)
+            //                    Server.v_user[j].SendMsg(string.Format("PROPER:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)PROPER.THIEF, (int)colorT));
+            //        }
+            //    }
+            //}
 
             tmr.Start();
         }
