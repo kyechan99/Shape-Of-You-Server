@@ -430,6 +430,7 @@ namespace Server
                 {
                     int colorT = Server.rand.Next(0, 9);
                     int pIdx = Server.rand.Next(0, memCount - (mIdx++));
+                    Server.v_user[i].proper = proArr[pIdx];
                     for (int j = 0; j < Server.v_user.Count; j++)
                         if (Server.v_user[j] != null)
                             Server.v_user[j].SendMsg(string.Format("PROPER:{0}:{1}:{2}", Server.v_user[i].myIdx, (int)proArr[pIdx], (int)colorT));
