@@ -15,7 +15,7 @@ namespace Server
         public static List<User> v_user = new List<User>();
         public static int userIdx = 0;
         public static ManualResetEvent allDone = new ManualResetEvent(false);
-        public static string version = "1.2.1";
+        public static string version = "1.2.2";
 
         /**
          * @brief 초기화
@@ -27,7 +27,6 @@ namespace Server
             v_user.Clear();
             WaitingSocket(port);
         }
-
 
         /**
          * @brief 유저 제거
